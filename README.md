@@ -1,64 +1,36 @@
-# NLC_Thyme_Meropenem
-
-Reproducible analysis workflow for meropenem-loaded nanostructured lipid carriers (NLCs), including figure generation and statistical outputs.
-
----
-
-## Project structure
-NLC_Thyme_Meropenem/
-├── data/
-│ └── nlc_data.csv
-├── scripts/
-│ ├── 01_analysis.R
-│ └── 02_stats.R
-├── figures/
-├── outputs/
-└── README.md
-
----
-
-## Particle size analysis (Meropenem-loaded NLCs)
-
-### Script
-- `scripts/01_analysis.R`
-
-### Input
-- `data/nlc_data.csv`  
-  The script automatically detects columns using keywords:
-  - **Formulation/group** column: `formulation`, `group`, `sample`, or `treat`
-  - **Particle size** column (nm): `size`, `particle`, `ps`, or `nm`
-
-### Analysis performed
-- Summary statistics (**mean ± SD**) per formulation
-- Shapiro–Wilk normality test (when n ≥ 3 per group)
-- Automatic 2-group comparison:
-  - **t-test** if both groups pass normality
-  - **Mann–Whitney** otherwise
-- Publication-ready figure:
-  - boxplot + individual points
-  - mean point
-  - mean ± SD labels
-  - p-value bracket annotation
-
-### Outputs
-**Figures**
-- `figures/particle_size_boxplot_stats.png`
-- `figures/particle_size_boxplot_stats.pdf`
-## Example output
-
-**Particle size of meropenem-loaded NLCs**
-
-![Particle size boxplot](figures/particle_size_boxplot_stats.png)
-
-**Tables**
-- `outputs/summary_stats_particle_size.csv`
-- `outputs/group_comparison_particle_size.csv`
-
----
-
-## How to run
-
-From the project root in R / Positron / RStudio:
-
-```r
-source("scripts/01_analysis.R")
+Supplementary Information
+Particle Size Analysis of Meropenem-Loaded Nanostructured Lipid Carriers
+Overview
+This Supplementary Information describes the statistical analysis and figure-generation workflow used to evaluate particle size distributions of meropenem-loaded nanostructured lipid carriers (NLCs), including formulations incorporating thyme oil. All analyses were performed using a fully reproducible computational pipeline implemented in R.
+Data and Experimental Groups
+Particle size measurements were obtained for two experimental formulations:
+Mero_NLC: meropenem-loaded nanostructured lipid carriers
+Mero+Thyme_NLC: meropenem-loaded nanostructured lipid carriers incorporating thyme oil
+The input dataset (nlc_data.csv) consisted of formulation identifiers and corresponding particle size values expressed in nanometres (nm). Sample sizes (n) correspond to the number of independent particle size measurements obtained for each formulation.
+Statistical Analysis
+All statistical analyses were conducted using R (version ≥ 4.1). Particle size data were summarised as mean ± standard deviation (SD) for each formulation. Data distributions were visualised using boxplots with individual measurements overlaid.
+Normality of particle size distributions was assessed using the Shapiro–Wilk test when the number of observations per group was ≥ 3. Based on the outcome of the normality assessment, inter-group comparisons were performed as follows:
+An unpaired two-tailed Student’s t-test was used when both groups exhibited normal distributions.
+The Mann–Whitney U test was applied when data deviated from normality.
+Statistical significance was evaluated at a two-sided α level of 0.05.
+Figure Generation and Visualisation
+Publication-ready figures were generated using custom R scripts. Boxplots display the median and interquartile range, with individual data points overlaid to illustrate data dispersion. The group mean is indicated on each boxplot, and mean ± SD values are annotated directly on the figure. Statistical comparisons between formulations are presented using a bracket with the corresponding p-value.
+Software and Packages
+All analyses and visualisations were performed using the following R packages:
+ggplot2
+dplyr
+readr
+forcats
+Custom scripts were used to ensure full reproducibility of statistical analyses and figure generation.
+Supplementary Figure
+Supplementary Figure S1. Particle size of meropenem-loaded nanostructured lipid carriers (NLCs).
+Boxplots show particle size distributions for Mero_NLC and Mero+Thyme_NLC formulations, with individual measurements overlaid. Values are presented as mean ± SD. Statistical comparison between groups was performed using the Mann–Whitney U test (p = 0.245).
+Code Availability
+All data processing, statistical analysis, and figure-generation scripts are available in the following GitHub repository:
+https://github.com/Draliahmad/NLC_Thyme_Meropenem
+Supplementary Outputs
+The following supplementary files were generated as part of the analysis:
+figures/particle_size_boxplot_stats.png
+figures/particle_size_boxplot_stats.pdf
+outputs/summary_stats_particle_size.csv
+outputs/group_comparison_particle_size.csv
