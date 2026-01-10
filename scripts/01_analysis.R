@@ -1,75 +1,172 @@
-# ============================================================
-# 01_analysis.R
-# Project: NLC_Thyme_Meropenem
-# Purpose: Descriptive analysis + particle size figure export
-# ============================================================
+# =========================================
+# Boxplot + points + mean ± SD labels
+# + statistical comparison (t-test or Mann-Whitney)
+# (NO ggpubr / NO rstatix needed)
+# =========================================
 
-# ----------------------------
-# Libraries
-# ----------------------------
-library(tidyverse)
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(forcats)
 
-# ----------------------------
-# Safety: create folders FIRST
-# ----------------------------
-if (!dir.exists("figures")) dir.create("figures")
-if (!dir.exists("outputs")) dir.create("outputs")
+# -------------------------
+# 1) Load data
+# -------------------------
+df <- read_csv("data/nlc_data.csv", show_col_types = FALSE)
 
-# ----------------------------
-# Load data
-# ----------------------------
-df <- read_csv("data/nlc_data.csv")
+# -------------------------
+# 2) Robust column detection
+# -------------------------
+cn <- names(df)
 
-# Expected columns (example):
-# Formulation | Size_nm | PDI | ZP_mV | EE_percent | Drug
+form_col <- cn[grepl("formulation|group|sample|treat", cn, ignore.case = TRUE)][1]
+if (is.na(form_col) || length(form_col) == 0) stop("Couldn't find a formulation/group column.")
 
-# ----------------------------
-# Summary statistics
-# ----------------------------
-summary_stats <- df %>%
+size_col <- cn[grepl("size|particle|ps|nm", cn, ignore.case = TRUE)][1]
+if (is.na(size_col) || length(size_col) == 0) stop("Couldn't find a particle size column.")
+
+df <- df %>%
+  rename(
+    Formulation = all_of(form_col),
+    Size_nm     = all_of(size_col)
+  ) %>%
+  mutate(
+    Formulation = as.factor(Formulation),
+    Size_nm     = as.numeric(Size_nm)
+  ) %>%
+  filter(!is.na(Formulation), !is.na(Size_nm))
+
+# Optional: set preferred order if present
+preferred_order <- c("Mero_NLC", "Mero+Thyme_NLC", "Mero_Thyme_NLC", "MeroThyme_NLC")
+df <- df %>%
+  mutate(Formulation = fct_relevel(Formulation, intersect(preferred_order, levels(Formulation))))
+
+# -------------------------
+# 3) Summary stats (mean ± SD)
+# -------------------------
+sumstats <- df %>%
   group_by(Formulation) %>%
   summarise(
     n = n(),
-    mean_size = mean(Size_nm, na.rm = TRUE),
-    sd_size   = sd(Size_nm, na.rm = TRUE),
-    min_size  = min(Size_nm, na.rm = TRUE),
-    max_size  = max(Size_nm, na.rm = TRUE),
+    mean = mean(Size_nm),
+    sd = ifelse(n() >= 2, sd(Size_nm), 0),
     .groups = "drop"
-  )
+  ) %>%
+  mutate(label = sprintf("%.1f \u00B1 %.1f", mean, sd))
 
-# Save summary statistics
-write_csv(summary_stats, "outputs/summary_stats.csv")
+dir.create("outputs", showWarnings = FALSE, recursive = TRUE)
+write_csv(sumstats, "outputs/summary_stats_particle_size.csv")
 
-# ----------------------------
-# Particle size boxplot
-# ----------------------------
-p_size <- ggplot(df, aes(x = Formulation, y = Size_nm, fill = Formulation)) +
-  geom_boxplot(alpha = 0.7, width = 0.6, outlier.shape = NA) +
-  geom_jitter(width = 0.08, size = 2, alpha = 0.8) +
+# -------------------------
+# 4) Statistical comparison (expects exactly 2 groups)
+# -------------------------
+ng <- nlevels(df$Formulation)
+if (ng != 2) {
+  stop(paste0(
+    "This script adds ONE comparison and expects 2 groups. You have ", ng,
+    ". If you want pairwise comparisons for >2 groups, tell me."
+  ))
+}
+
+lvl <- levels(df$Formulation)
+g1 <- lvl[1]; g2 <- lvl[2]
+
+x1 <- df$Size_nm[df$Formulation == g1]
+x2 <- df$Size_nm[df$Formulation == g2]
+
+p_sh1 <- if (length(x1) >= 3) shapiro.test(x1)$p.value else NA_real_
+p_sh2 <- if (length(x2) >= 3) shapiro.test(x2)$p.value else NA_real_
+
+use_ttest <- !is.na(p_sh1) && !is.na(p_sh2) && p_sh1 > 0.05 && p_sh2 > 0.05
+
+if (use_ttest) {
+  test_name <- "t-test"
+  pval <- t.test(x1, x2)$p.value
+} else {
+  test_name <- "Mann-Whitney"   # ✅ FIXED (normal hyphen)
+  pval <- wilcox.test(x1, x2, exact = FALSE)$p.value
+}
+
+p_text <- if (pval < 0.001) "p < 0.001" else paste0("p = ", formatC(pval, format = "f", digits = 3))
+
+test_out <- data.frame(
+  group1 = g1,
+  group2 = g2,
+  test = test_name,
+  p_value = pval,
+  shapiro_p_group1 = p_sh1,
+  shapiro_p_group2 = p_sh2
+)
+write_csv(test_out, "outputs/group_comparison_particle_size.csv")
+
+# -------------------------
+# 5) Label positions
+# -------------------------
+ymin <- min(df$Size_nm, na.rm = TRUE)
+ymax <- max(df$Size_nm, na.rm = TRUE)
+y_range <- ymax - ymin
+
+offset_mean <- 0.08 * y_range
+offset_bracket <- 0.22 * y_range
+
+label_df <- sumstats %>%
+  mutate(y = mean + offset_mean)
+
+y_bracket <- ymax + offset_bracket
+y_text <- y_bracket + 0.06 * y_range
+tick_h <- 0.04 * y_range
+
+# -------------------------
+# 6) Plot
+# -------------------------
+p <- ggplot(df, aes(x = Formulation, y = Size_nm, fill = Formulation)) +
+  geom_boxplot(
+    width = 0.55,
+    outlier.shape = NA,
+    alpha = 0.8,
+    linewidth = 0.6
+  ) +
+  geom_jitter(
+    width = 0.10,
+    height = 0,
+    size = 2.2,
+    alpha = 0.9
+  ) +
+  stat_summary(fun = mean, geom = "point", size = 3.2, shape = 23) +
+  geom_text(
+    data = label_df,
+    aes(x = Formulation, y = y, label = label),
+    inherit.aes = FALSE,
+    size = 3.6,
+    fontface = "bold",
+    vjust = 0
+  ) +
+  annotate("segment", x = 1, xend = 2, y = y_bracket, yend = y_bracket, linewidth = 0.6) +
+  annotate("segment", x = 1, xend = 1, y = y_bracket - tick_h, yend = y_bracket, linewidth = 0.6) +
+  annotate("segment", x = 2, xend = 2, y = y_bracket - tick_h, yend = y_bracket, linewidth = 0.6) +
+  annotate("text", x = 1.5, y = y_text, label = paste0(test_name, "\n", p_text),
+           size = 4, fontface = "bold") +
   labs(
     title = "Particle size of meropenem-loaded NLCs",
     x = "Formulation",
     y = "Size (nm)"
   ) +
-  theme_minimal(base_size = 13) +
+  theme_classic(base_size = 12) +
   theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    axis.title = element_text(face = "bold"),
+    axis.text.x = element_text(face = "bold"),
+    legend.title = element_blank(),
     legend.position = "right",
-    plot.title = element_text(face = "bold", hjust = 0.5)
-  )
+    plot.margin = margin(10, 15, 10, 10)
+  ) +
+  coord_cartesian(clip = "off")
 
-# ----------------------------
-# SAVE FIGURE (AFTER folders exist)
-# ----------------------------
-ggsave(
-  filename = "figures/particle_size_boxplot.png",
-  plot = p_size,
-  width = 7,
-  height = 5,
-  dpi = 300
-)
+# -------------------------
+# 7) Save
+# -------------------------
+dir.create("figures", showWarnings = FALSE, recursive = TRUE)
+ggsave("figures/particle_size_boxplot_stats.png", p, width = 7, height = 5, dpi = 300)
+ggsave("figures/particle_size_boxplot_stats.pdf", p, width = 7, height = 5)
 
-# ----------------------------
-# Confirmation messages
-# ----------------------------
-cat("✓ Plot saved to figures/particle_size_boxplot.png\n")
-cat("✓ Summary stats saved to outputs/summary_stats.csv\n")
+p
