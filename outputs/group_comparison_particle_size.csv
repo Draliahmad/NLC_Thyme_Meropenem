@@ -1,2 +1,2 @@
-group1,group2,test,p_value,shapiro_p_group1,shapiro_p_group2
-Mero_NLC,Mero+Thyme_NLC,Mann-Whitney,0.24527811680677283,NA,NA
+group1,group2,test,p_value
+Mero_NLC,Mero+Thyme_NLC,Mann-Whitney,0.24527811680677283
