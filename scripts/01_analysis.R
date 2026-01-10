@@ -1,37 +1,56 @@
-# 01_analysis.R  (copy/paste the whole file)
+# ===============================
+# 01_analysis.R
+# NLC_Thyme_Meropenem
+# ===============================
 
-# 1) Load packages (installs tidyverse if missing)
-if (!requireNamespace("tidyverse", quietly = TRUE)) install.packages("tidyverse")
+# ---- Libraries ----
 library(tidyverse)
 
-# 2) Read data
-df <- readr::read_csv("data/nlc_data.csv", show_col_types = FALSE)
+# ---- Working directory safety check ----
+# (Optional but recommended)
+# setwd("/Users/mariamurad/NLC_Thyme_Meropenem")
 
-# 3) Quick check
-print(df)
+# ---- Load data ----
+df <- read_csv("data/nlc_data.csv")
 
-# 4) Summary statistics (means)
-summary_stats <- df %>%
-  dplyr::group_by(Formulation) %>%
-  dplyr::summarise(
-    Size_mean = mean(Size_nm, na.rm = TRUE),
-    PDI_mean  = mean(PDI, na.rm = TRUE),
-    ZP_mean   = mean(ZP_mV, na.rm = TRUE),
-    EE_mean   = mean(EE_percent, na.rm = TRUE),
-    .groups = "drop"
+# ---- Ensure figures directory exists (MUST BE FIRST) ----
+if (!dir.exists("figures")) {
+  dir.create("figures")
+}
+
+# ---- Particle size boxplot ----
+p_size <- ggplot(
+  df,
+  aes(
+    x = Formulation,
+    y = Size_nm,
+    fill = Formulation
   )
-
-# 5) Save summary to outputs/
-readr::write_csv(summary_stats, "outputs/summary_stats.csv")
-
-# 6) Plot particle size
-ggplot2::ggplot(df, ggplot2::aes(x = Formulation, y = Size_nm, fill = Formulation)) +
-  ggplot2::geom_boxplot(alpha = 0.7, outlier.alpha = 0.4) +
-  ggplot2::geom_jitter(width = 0.12, size = 2, alpha = 0.7) +
-  ggplot2::theme_minimal(base_size = 13) +
-  ggplot2::labs(
+) +
+  geom_boxplot(alpha = 0.7, width = 0.6, outlier.shape = NA) +
+  geom_jitter(width = 0.08, size = 2, alpha = 0.9) +
+  labs(
     title = "Particle size of meropenem-loaded NLCs",
     y = "Size (nm)",
     x = NULL
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(face = "bold")
   )
 
+# ---- Display plot in Viewer ----
+p_size
+
+# ---- SAVE plot to figures/ (AFTER folder exists) ----
+ggsave(
+  filename = "figures/particle_size_boxplot.png",
+  plot     = p_size,
+  width    = 7,
+  height   = 5,
+  dpi      = 300
+)
+
+# ---- Message for confirmation ----
+cat("✔ Plot saved to figures/particle_size_boxplot.png\n")
