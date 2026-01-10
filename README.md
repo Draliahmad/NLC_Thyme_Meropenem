@@ -45,8 +45,7 @@ Custom scripts were used to ensure full reproducibility of statistical analyses 
 ---
 
 ## Supplementary Figure
-**Supplementary Figure S1. Particle size of meropenem-loaded nanostructured lipid carriers (NLCs).**  
-Boxplots show particle size distributions for Mero_NLC and Mero+Thyme_NLC formulations, with individual measurements overlaid. Values are presented as mean ± SD. Statistical comparison between groups was performed using the Mann–Whitney U test (*p* = 0.245).
+
 ![Supplementary Figure S1: Particle size of meropenem-loaded NLCs](figures/particle_size_boxplot_stats.png)
 Boxplots show the distribution of particle size measurements for meropenem-loaded NLCs without (Mero_NLC) and with thyme oil incorporation (Mero+Thyme_NLC). Individual data points represent independent particle size measurements (nm). The central line indicates the median, boxes represent the interquartile range, and whiskers denote data dispersion. Mean particle size values ± standard deviation (SD) are annotated above each group. Statistical comparison between formulations was performed using the Mann–Whitney U test, with no significant difference observed between groups (p = 0.245).
 ---
