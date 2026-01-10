@@ -1,53 +1,59 @@
 # NLC_Thyme_Meropenem
 
-Statistical analysis of thyme oil–modified meropenem-loaded nanostructured lipid carriers (NLCs).
+Reproducible analysis workflow for meropenem-loaded nanostructured lipid carriers (NLCs), including figure generation and statistical outputs.
 
 ---
 
-## Methods
-
-- Data analysis performed in **R (v4.5.1)** using tidyverse-based workflows.
-- Particle size distributions were visualised using boxplots.
-- Statistical inference:
-  - Independent two-sample *t*-test
-  - Effect size estimation (Cohen’s *d*)
-
----
-
-## Figure
-
-![Particle size boxplot](figures/particle_size_boxplot.png)
+## Project structure
+NLC_Thyme_Meropenem/
+├── data/
+│ └── nlc_data.csv
+├── scripts/
+│ ├── 01_analysis.R
+│ └── 02_stats.R
+├── figures/
+├── outputs/
+└── README.md
 
 ---
 
-## Outputs
+## Particle size analysis (Meropenem-loaded NLCs)
 
-- `figures/particle_size_boxplot.png`  
-  Particle size distribution (boxplot).
+### Script
+- `scripts/01_analysis.R`
 
-- `outputs/summary_stats.csv`  
-  Descriptive statistics per formulation (n, mean, SD, SE).
+### Input
+- `data/nlc_data.csv`  
+  The script automatically detects columns using keywords:
+  - **Formulation/group** column: `formulation`, `group`, `sample`, or `treat`
+  - **Particle size** column (nm): `size`, `particle`, `ps`, or `nm`
 
-- `outputs/final_statistical_results.csv`  
-  Final results including group means, mean difference, *t*-test *p*-value, and Cohen’s *d*.
+### Analysis performed
+- Summary statistics (**mean ± SD**) per formulation
+- Shapiro–Wilk normality test (when n ≥ 3 per group)
+- Automatic 2-group comparison:
+  - **t-test** if both groups pass normality
+  - **Mann–Whitney** otherwise
+- Publication-ready figure:
+  - boxplot + individual points
+  - mean point
+  - mean ± SD labels
+  - p-value bracket annotation
+
+### Outputs
+**Figures**
+- `figures/particle_size_boxplot_stats.png`
+- `figures/particle_size_boxplot_stats.pdf`
+
+**Tables**
+- `outputs/summary_stats_particle_size.csv`
+- `outputs/group_comparison_particle_size.csv`
 
 ---
 
-## Statistical Testing
+## How to run
 
-The script `scripts/02_stats.R` performs:
-
-- Two-sample *t*-test: `t.test(Size_nm ~ Formulation)`
-- Cohen’s *d* (pooled SD)
-
-Results are saved to:
-
-- `outputs/final_statistical_results.csv`
-
----
-
-## How to Reproduce
+From the project root in R / Positron / RStudio:
 
 ```r
 source("scripts/01_analysis.R")
-source("scripts/02_stats.R")
