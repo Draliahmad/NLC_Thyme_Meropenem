@@ -44,6 +44,11 @@ NLC_Thyme_Meropenem/
 **Figures**
 - `figures/particle_size_boxplot_stats.png`
 - `figures/particle_size_boxplot_stats.pdf`
+## Example output
+
+**Particle size of meropenem-loaded NLCs**
+
+![Particle size boxplot](figures/particle_size_boxplot_stats.png)
 
 **Tables**
 - `outputs/summary_stats_particle_size.csv`
