@@ -1,3 +1,4 @@
+ DOI: 10.5281/zenodo.18291004
 # Supplementary Information
 
 ## Particle Size Analysis of Meropenem-Loaded Nanostructured Lipid Carriers
